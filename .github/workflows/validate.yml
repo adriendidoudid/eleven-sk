@@ -1,0 +1,36 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Static validation (frontmatter, bash syntax, JSON payloads)
+        run: python3 scripts/validate.py
+      - name: Test jq expressions against mock API responses
+        run: bash scripts/test-jq.sh
+
+  # Optional live check against the real ElevenLabs API.
+  # Runs only on manual dispatch and only if the ELEVENLABS_API_KEY repo secret is set
+  # (Settings > Secrets and variables > Actions).
+  live-smoke:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping ElevenLabs models endpoint
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: |
+          if [ -z "$ELEVENLABS_API_KEY" ]; then
+            echo "ELEVENLABS_API_KEY secret not set — skipping live smoke test."
+            exit 0
+          fi
+          curl -sf https://api.elevenlabs.io/v1/models \
+            -H "xi-api-key: $ELEVENLABS_API_KEY" \
+            | jq -e '.[0].model_id'
