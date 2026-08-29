@@ -1,0 +1,4 @@
+# Shell scripts and skill files must stay LF everywhere: CRLF breaks `bash scripts/*.sh`
+# on the Linux CI runner, and a CRLF SKILL.md confuses agents that parse the frontmatter.
+* text=auto eol=lf
+*.jpg binary

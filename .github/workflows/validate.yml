@@ -5,16 +5,40 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  schedule:
+    # Weekly drift check: the skill documents a third-party API that moves on its own.
+    - cron: "17 6 * * 1"
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Static validation (frontmatter, bash syntax, JSON payloads)
+      - name: Static validation (frontmatter, bash syntax, JSON payloads, references)
         run: python3 scripts/validate.py
       - name: Test jq expressions against mock API responses
         run: bash scripts/test-jq.sh
+      - name: Conformance against the Agent Skills reference implementation
+        continue-on-error: true # informational: skills-ref is still alpha
+        run: |
+          pip install --quiet skills-ref
+          skills-ref validate ./skills/elevenlabs
+
+  # Compares every endpoint path and model id the skill documents against ElevenLabs'
+  # live OpenAPI document. Needs no API key.
+  api-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the skill against the live ElevenLabs API spec
+        run: |
+          rc=0
+          python3 scripts/check-api-drift.py || rc=$?
+          if [ "$rc" -eq 2 ]; then
+            echo "::warning::could not reach the ElevenLabs OpenAPI spec — drift check skipped"
+            exit 0
+          fi
+          exit "$rc"
 
   # Optional live check against the real ElevenLabs API.
   # Runs only on manual dispatch and only if the ELEVENLABS_API_KEY repo secret is set
@@ -23,7 +47,8 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - name: Ping ElevenLabs models endpoint
+      - uses: actions/checkout@v4
+      - name: Ping ElevenLabs models endpoint and diff the live catalogue
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
         run: |
@@ -34,3 +59,4 @@ jobs:
           curl -sf https://api.elevenlabs.io/v1/models \
             -H "xi-api-key: $ELEVENLABS_API_KEY" \
             | jq -e '.[0].model_id'
+          python3 scripts/check-api-drift.py
