@@ -13,23 +13,25 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Static validation (frontmatter, bash syntax, JSON payloads, references)
         run: python3 scripts/validate.py
       - name: Test jq expressions against mock API responses
         run: bash scripts/test-jq.sh
       - name: Conformance against the Agent Skills reference implementation
-        continue-on-error: true # informational: skills-ref is still alpha
+        # The package is skills-ref, but the console script it installs is `agentskills`
+        # (agentskills.io documents `skills-ref validate`, which does not exist).
+        # Pinned because the reference library is still 0.x.
         run: |
-          pip install --quiet skills-ref
-          skills-ref validate ./skills/elevenlabs
+          pip install --quiet skills-ref==0.1.1
+          agentskills validate ./skills/elevenlabs
 
   # Compares every endpoint path and model id the skill documents against ElevenLabs'
   # live OpenAPI document. Needs no API key.
   api-drift:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Check the skill against the live ElevenLabs API spec
         run: |
           rc=0
@@ -47,7 +49,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Ping ElevenLabs models endpoint and diff the live catalogue
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
