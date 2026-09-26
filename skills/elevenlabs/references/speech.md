@@ -24,8 +24,7 @@ EOF
 file /tmp/eleven-tts.mp3
 ```
 
-`model_id` defaults to `eleven_multilingual_v2` if omitted. Pick a model with the table in `SKILL.md`
-— `eleven_v3` for expressive/emotional delivery, `eleven_flash_v2_5` when latency matters.
+`model_id` defaults to `eleven_multilingual_v2` if omitted.
 
 **`voice_settings`** (all optional, applied only to this request — stored voice settings are used for
 anything you omit):
@@ -56,7 +55,32 @@ anything you omit):
 
 `optimize_streaming_latency` and `use_pvc_as_ivc` are **deprecated** — do not use them in new code.
 
-Move the file to a real destination with a descriptive name once verified (e.g.
+### Intelligent Model Selection: Quality vs Cost vs Speed
+
+| Need | Recommended model | Credits / char | Latency | When to pick |
+|---|---|---|---|---|
+| **Lowest cost / Drafts / Multiple takes** | `eleven_flash_v2_5` | **0.5 credits (50% off)** | **~75 ms** | User asks for the cheapest option, multiple takes/variations to choose from, fast previews, or real-time voice bots (32 langs). |
+| **Max expressiveness / Acting / 70+ langs** | `eleven_v3` | 1.0 credit | Normal | Emotional voiceover, storytelling, drama, character dialogue. Reads inline audio tags like `[whispering]`, `[laughs]`, `[excited]`. |
+| **Long-form consistency / Audiobooks** | `eleven_multilingual_v2` | 1.0 credit | Normal | Audiobooks, corporate e-learning, long documents where cadence must stay strictly identical across chapters (29 langs). |
+
+**Generating multiple takes (cheaply & quickly):**
+When the user asks for multiple variations/takes to pick the best one, or asks for the cheapest option, naturally default to `eleven_flash_v2_5` to cut credit consumption in half:
+
+```bash
+KEY="${ELEVENLABS_API_KEY:-$ELEVEN_API_KEY}"
+VOICE_ID="21m00Tcm4TlvDq8ikWAM"
+for SEED in 101 202 303; do
+  jq -n --arg t "Exploring multiple delivery takes for the narration." \
+        --argjson s "$SEED" \
+    '{text: $t, model_id: "eleven_flash_v2_5", seed: $s}' \
+  | curl -s "https://api.elevenlabs.io/v1/text-to-speech/$VOICE_ID" \
+      -H "xi-api-key: $KEY" -H "Content-Type: application/json" -d @- \
+      -o "/tmp/eleven-take-$SEED.mp3"
+  file "/tmp/eleven-take-$SEED.mp3"
+done
+```
+
+Move the chosen take to a real destination with a descriptive name once verified (e.g.
 `public/audio/narration-01.mp3`).
 
 ### 1b. Convert with timestamps (word/character-level alignment)
@@ -151,7 +175,8 @@ plain text that `eleven_v3` interprets as delivery direction.
 
 Optional: `settings.stability` (only `stability` is supported here — not the full TTS
 `voice_settings` object), `seed`, `language_code`, `pronunciation_dictionary_locators`,
-`apply_text_normalization`.
+`apply_text_normalization`, `previous_text` / `future_text` (max 100 chars each for prosodic
+continuity), and `previous_request_ids` / `next_request_ids` (max 3 each).
 
 The same variants as TTS exist and take the same body — `POST /v1/text-to-dialogue/stream`,
 `POST /v1/text-to-dialogue/with-timestamps` and `POST /v1/text-to-dialogue/stream/with-timestamps`,

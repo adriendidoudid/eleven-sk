@@ -23,13 +23,13 @@ Every endpoint and model id below is verified against ElevenLabs' live [OpenAPI 
 
 | Capability | Endpoints | Notes |
 |---|---|---|
-| Text to speech | `/v1/text-to-speech/{voice_id}` + `/with-timestamps`, `/stream`, `/stream/with-timestamps` | `eleven_multilingual_v2`, `eleven_v3`, `eleven_flash_v2_5` |
+| Text to speech | `/v1/text-to-speech/{voice_id}` + `/with-timestamps`, `/stream`, `/stream/with-timestamps` | `eleven_v3` (flagship, audio tags), `eleven_multilingual_v2`, `eleven_flash_v2_5` (~75 ms) |
 | Text to dialogue | `/v1/text-to-dialogue` + 3 variants | Multi-speaker in one call, `eleven_v3` |
 | Speech to text | `/v1/speech-to-text` + `/transcripts/{id}` | `scribe_v2`, diarization, SRT export, YouTube/TikTok URLs |
 | Sound effects | `/v1/sound-generation` | 0.5–30 s, seamless looping |
-| Music | `/v1/music` + `/detailed`, `/stream`, `/plan`, `/video-to-music`, `/stem-separation`, `/upload`, `/finetunes` | `music_v1`/`music_v2`, composition plans, inpainting |
+| Music | `/v1/music` + `/detailed`, `/stream`, `/plan`, `/video-to-music`, `/stem-separation`, `/upload`, `/finetunes` | `music_v2_5` (flagship), `music_v2`, `music_v1`, composition plans, inpainting |
 | Voice changer | `/v1/speech-to-speech/{voice_id}` + `/stream` | Preserves emotion and timing |
-| Voice design and cloning | `/v1/text-to-voice/*`, `/v1/voices/add`, `/v1/voices/pvc/*` | Design, remix, instant and fully API-driven professional cloning |
+| Voice design and cloning | `/v1/text-to-voice/*`, `/v1/voices/add`, `/v1/voices/pvc/*` | `eleven_ttv_v3` (latest v3) & `eleven_multilingual_ttv_v2`, IVC and professional cloning |
 | Voice discovery | `/v2/voices`, `/v1/shared-voices`, `/v1/similar-voices` | Search and filter, licensed library, find a similar voice |
 | Audio isolation | `/v1/audio-isolation` + `/stream`, `/history` | Background noise removal |
 | Dubbing | `/v1/dubbing/project/*` | Async. Per-language targets, transcript editing |
@@ -170,7 +170,9 @@ python3 scripts/validate.py && bash scripts/test-jq.sh && python3 scripts/check-
 
 Pricing is credit-based and changes over time — check [elevenlabs.io/pricing](https://elevenlabs.io/pricing) for current rates. The skill includes a quota check (`GET /v1/user/subscription`) to read remaining characters and credits before large jobs.
 
-It also flags the options that silently cost more, so an agent does not enable them by reflex: speech-to-text `entity_detection` and `entity_redaction` (+30% each), `keyterms` (+20%), and `use_multi_channel` (each channel billed at the full audio duration).
+For text-to-speech, **`eleven_flash_v2_5` costs 0.5 credits per character (50% cheaper)** compared to 1 credit/char for standard and v3 models. The skill instructs agents to pick `eleven_flash_v2_5` whenever the user asks for the cheapest option, multiple variations/takes of the same text, or rapid prototyping.
+
+It also flags the options that silently cost more, so an agent does not enable them by reflex: speech-to-text `entity_detection` and `entity_redaction` (+30% each), `keyterms` (+20%), `detect_speaker_roles` (+10%), and `use_multi_channel` (each channel billed at the full audio duration).
 
 ## License
 

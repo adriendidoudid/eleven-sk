@@ -8,9 +8,8 @@ Conventions are in `SKILL.md`.
 `POST /v1/speech-to-text` — multipart. `model_id` is **required**, and exactly one of `file` or
 `source_url` must be supplied.
 
-**Use `scribe_v2`.** `scribe_v1` is deprecated (ElevenLabs announced removal for 2026-07-09; it is
-still accepted by the API but should not be used for new work) and several options below are
-`scribe_v2`-only. `scribe_v2_realtime` exists but is WebSocket-only — see §3.
+**Use `scribe_v2`.** `scribe_v1` has been retired and removed from the API. `scribe_v2_realtime`
+exists but is WebSocket-only — see §3.
 
 ```bash
 KEY="${ELEVENLABS_API_KEY:-$ELEVEN_API_KEY}"
@@ -39,8 +38,11 @@ Limits: local file ≤ 5 GB, `source_url` file ≤ 2 GB, minimum 100 ms of audio
 | `language_code` | ISO-639-1 or -3. Omit to auto-detect (`.language_code` + `.language_probability` come back either way) |
 | `num_speakers` | Hint for diarization, max 32 |
 | `diarization_threshold` | 0–1, only with `diarize=true` and no `num_speakers`. Lower = more speakers predicted. Default ≈0.22 |
-| `keyterms` | Bias the transcript toward given terms (brand/product names). **+20% cost** |
+| `detect_speaker_roles` | Label speakers as `agent` vs `customer` instead of `speaker_0`/`speaker_1`. Requires `diarize=true`. Cannot combine with `use_multi_channel`. **+10% cost** |
+| `use_speaker_library` | Matches detected speakers against registered voices in the workspace speaker library. Requires `diarize=true` |
+| `keyterms` | Bias transcript toward terms (brand/product names, ≤1000 terms, <50 chars, max 5 words). Over 100 terms enforces 20s min duration. **+20% cost** |
 | `entity_detection` / `entity_redaction` | `all`, or `pii`/`phi`/`pci`/`other`/`offensive_language`. Results land in `.entities[]`. **+30% cost each** |
+| `entity_redaction_mode` | Formatting for redactions: `enumerated_entity_type` (default, e.g. `{EMAIL_1}`), `entity_type` (`{EMAIL}`), or `redacted` (`{REDACTED}`) |
 | `no_verbatim` | Strips fillers and false starts. **`scribe_v2` only** |
 | `temperature` | 0.0–2.0, default ~0. Higher = less deterministic |
 | `seed` | 0–2147483647, best-effort determinism |

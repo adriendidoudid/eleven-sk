@@ -108,7 +108,7 @@ History is unavailable for requests made with `enable_logging: false` (zero-rete
 
 `output_format` is a **query parameter**, written `codec_samplerate_bitrate`. Default is
 `mp3_44100_128` everywhere except `/v1/music`, where it is `auto` (which resolves to `mp3_44100_128`
-for `music_v1` and `mp3_48000_192` for `music_v2`).
+for `music_v1` and `mp3_48000_192` for `music_v2` and `music_v2_5`).
 
 | Family | Values | Notes |
 |---|---|---|

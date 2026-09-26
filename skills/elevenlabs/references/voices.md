@@ -25,7 +25,7 @@ curl -s https://api.elevenlabs.io/v1/text-to-voice/design \
 {
   "voice_description": "Warm, calm middle-aged British male narrator, gentle pacing, radio-documentary tone",
   "auto_generate_text": true,
-  "model_id": "eleven_multilingual_ttv_v2",
+  "model_id": "eleven_ttv_v3",
   "loudness": 0.5,
   "guidance_scale": 5
 }
@@ -42,7 +42,7 @@ minimum, check durations; don't blindly take `previews[0]`.
 |---|---|
 | `voice_description` | Required. Longer, more specific descriptions work better |
 | `auto_generate_text` | `true` lets the model write the preview script. Otherwise supply `text` (100–1000 chars) |
-| `model_id` | `eleven_multilingual_ttv_v2` (default) or `eleven_ttv_v3` |
+| `model_id` | `eleven_ttv_v3` (latest v3, highest quality, 70+ langs) or `eleven_multilingual_ttv_v2` (API default) |
 | `guidance_scale` | Default 5. Lower = more creative freedom; too high sounds robotic. Prefer a long prompt at low guidance |
 | `loudness` | -1 to 1, default 0.5 (≈ -24 LUFS) |
 | `should_enhance` | Expands a short prompt into a richer description before generating. Useful when the user's brief is one line |

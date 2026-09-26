@@ -46,7 +46,7 @@ curl -s https://api.elevenlabs.io/v1/music \
 {
   "prompt": "Upbeat lo-fi hip hop, mellow piano chords, soft vinyl crackle, chill study-session vibe",
   "music_length_ms": 30000,
-  "model_id": "music_v2",
+  "model_id": "music_v2_5",
   "store_for_inpainting": true
 }
 EOF
@@ -55,8 +55,9 @@ grep -i '^song-id:' /tmp/eleven-music-headers.txt
 ```
 
 - `music_length_ms`: 3000–600000. Omit to let the model choose a length from the prompt.
-- `model_id`: `music_v1` (API default) or `music_v2` (studio-grade, newer — prefer it unless the user
-  asks otherwise). `music_v2` always enforces `composition_plan` section durations.
+- `model_id`: `music_v2_5` (flagship, studio-grade, superior vocal and acoustic realism — prefer it),
+  `music_v2` (previous studio-grade), or `music_v1` (legacy, API default). `music_v2` and
+  `music_v2_5` always enforce `composition_plan` section durations.
 - `force_instrumental: true` guarantees no vocals. Only valid alongside `prompt`.
 - `seed` gives more consistent re-runs but **cannot be combined with `prompt`** — it is for
   `composition_plan` generations only.
@@ -65,26 +66,26 @@ grep -i '^song-id:' /tmp/eleven-music-headers.txt
 - `sign_with_c2pa: true` embeds C2PA provenance (MP3 output only).
 - `finetune_id` selects a custom music finetune (see §6).
 - Query param `output_format` defaults to `auto`, which picks `mp3_44100_128` for v1 models and
-  `mp3_48000_192` for v2. Override only for a specific delivery target.
+  `mp3_48000_192` for v2/v2.5. Override only for a specific delivery target.
 
 ### Composition plans (per-section control)
 
 `prompt` and `composition_plan` are **mutually exclusive**. A plan lets you specify styles, lyrics and
-duration per section (3000–120000 ms each, ≤30 lines and ≤200 chars per line). Generate a starting
-plan from a prompt with:
+duration per section (3000–120000 ms each, ≤30 lines and ≤200 chars per line, up to 6,132 chars total).
+Generate a starting plan from a prompt with:
 
 ```bash
 KEY="${ELEVENLABS_API_KEY:-$ELEVEN_API_KEY}"
 curl -s https://api.elevenlabs.io/v1/music/plan \
   -H "xi-api-key: $KEY" -H "Content-Type: application/json" \
-  -d '{"prompt":"Cinematic trailer, slow build to a big drop","music_length_ms":45000,"model_id":"music_v2"}' \
+  -d '{"prompt":"Cinematic trailer, slow build to a big drop","music_length_ms":45000,"model_id":"music_v2_5"}' \
   > /tmp/eleven-plan.json
 jq . /tmp/eleven-plan.json
 ```
 
 Then edit that JSON and send it back as `composition_plan`. (`respect_sections_durations: false`
 lets `music_v1` bend individual section lengths for quality while preserving the total — it is
-ignored by `music_v2`.)
+ignored by `music_v2` and `music_v2_5`.)
 
 ## 3. Music — compose with metadata
 
@@ -165,9 +166,9 @@ vocals/drums/bass/guitar/piano/other).
 ## 6. Upload and finetunes
 
 - `POST /v1/music/upload` — multipart `file`, brings an existing track into ElevenLabs. Optional
-  `extract_composition_plan` (pass a model id, `music_v1` or `music_v2`; the boolean form is
-  deprecated), `with_timestamps` for word-level lyric timings, `with_waveform_visual`. Each option
-  adds latency.
+  `extract_composition_plan` (pass a model id, `music_v1`, `music_v2`, or `music_v2_5`; the boolean
+  form is deprecated), `with_timestamps` for word-level lyric timings, `with_waveform_visual`. Each
+  option adds latency.
 - `GET|POST /v1/music/finetunes` and `GET|PATCH|DELETE /v1/music/finetunes/{finetune_id}` manage
   custom music finetunes. Pass the resulting id as `finetune_id` in §2. Only reach for these if the
   user explicitly asks for a trained/custom music model.

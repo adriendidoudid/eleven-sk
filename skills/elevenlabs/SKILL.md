@@ -4,8 +4,8 @@ description: Call ElevenLabs' API (authenticated with ELEVENLABS_API_KEY) for te
 license: MIT
 compatibility: Needs curl and jq on PATH, network access to api.elevenlabs.io, and ELEVENLABS_API_KEY (or ELEVEN_API_KEY) exported. python3 is needed only for the multipart/mixed response of /v1/music/detailed; ffmpeg only to remux a dubbed audio track back into a video.
 metadata:
-  version: "2.0"
-  api-verified: "2026-08-29"
+  version: "2.1"
+  api-verified: "2026-09-26"
 ---
 
 # ElevenLabs API
@@ -107,14 +107,20 @@ recommended pick per capability.
 
 | Capability | Use | Also available | Avoid |
 |---|---|---|---|
-| Text to speech | `eleven_multilingual_v2` (API default, 29 langs) | `eleven_v3` (most expressive, 70+ langs), `eleven_flash_v2_5` (~75 ms, 32 langs), `eleven_flash_v2` (~75 ms, English) | `eleven_turbo_v2`, `eleven_turbo_v2_5`, `eleven_monolingual_v1`, `eleven_multilingual_v1` — all deprecated |
+| Text to speech | `eleven_v3` (flagship expressive, audio tags), `eleven_multilingual_v2` (stable narration), or `eleven_flash_v2_5` (cheapest & fastest, 50% credits) | `eleven_flash_v2` (~75 ms, English) | `eleven_turbo_v2`, `eleven_turbo_v2_5`, `eleven_monolingual_v1`, `eleven_multilingual_v1` — all deprecated |
 | Text to dialogue | `eleven_v3` (default; reads bracketed cues like `[amused]`) | `eleven_v3_conversational` (~280 ms, realtime) | |
-| Speech to text | `scribe_v2` | `scribe_v2_realtime` (WebSocket only) | `scribe_v1` — deprecated, removal announced for 2026-07-09 |
+| Speech to text | `scribe_v2` (flagship, 90+ langs) | `scribe_v2_realtime` (WebSocket only) | `scribe_v1` — retired (removed from API) |
 | Voice changer | `eleven_multilingual_sts_v2` | `eleven_english_sts_v2` (API default, English) | |
 | Sound effects | `eleven_text_to_sound_v2` (only option) | | |
-| Music | `music_v2` (studio-grade) | `music_v1` (API default) | |
-| Voice design | `eleven_multilingual_ttv_v2` (default) | `eleven_ttv_v3` (needed for reference-audio conditioning) | |
+| Music | `music_v2_5` (flagship, studio-grade) | `music_v2` (studio-grade), `music_v1` (legacy/API default) | |
+| Voice design | `eleven_ttv_v3` (latest v3, highest quality, reference audio) or `eleven_multilingual_ttv_v2` (API default) | | |
 | Dubbing | `dubbing_v2` | `dubbing_v1` | |
+
+### Choosing the right TTS model intelligently
+
+- **Lowest cost / multiple takes / quick tests**: Use `eleven_flash_v2_5`. It costs **0.5 credits/char (50% cheaper)** and runs in ~75 ms (32 langs). If the user asks for the cheapest option, asks to generate multiple takes/variations of the same text to compare, or needs fast prototyping, pick `eleven_flash_v2_5` automatically.
+- **Expressive drama / storytelling / character voices / 70+ langs**: Use `eleven_v3` (1 credit/char). Supports inline audio direction tags like `[whispering]`, `[sighs]`, `[excited]`, `[laughs]`.
+- **Audiobooks / long-form narration / consistency**: Use `eleven_multilingual_v2` (API default, 1 credit/char). Most uniform cadence over long scripts and legacy voice clones (29 langs).
 
 Note the "API default" markers: several endpoints default to an older model than the one you should
 pick, so pass `model_id` explicitly rather than relying on the default.
@@ -157,8 +163,9 @@ EOF
 file /tmp/eleven-tts.mp3
 ```
 
-Move the file to a real destination with a descriptive name once verified (e.g.
-`public/audio/narration-01.mp3`).
+For expressive drama, storytelling, or 70+ languages, switch to `"model_id": "eleven_v3"` and use
+inline audio tags like `[whispering]`, `[sighs]`, or `[excited]` directly in the text. Move the file
+to a real destination once verified (e.g. `public/audio/narration-01.mp3`).
 
 ## Recipe 2 — Sound effect
 

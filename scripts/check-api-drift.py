@@ -55,6 +55,7 @@ DEPRECATED_ON_PURPOSE = {
     "eleven_multilingual_v1",
     "eleven_turbo_v2",
     "eleven_turbo_v2_5",
+    "scribe_v1",
 }
 
 # Models that legitimately never appear in the REST OpenAPI document: the endpoint takes model_id as
@@ -68,7 +69,7 @@ NOT_IN_REST_SPEC = {
     "scribe_v2_realtime_lite",
 }
 
-MODEL_RE = re.compile(r"\b(?:eleven_[a-z0-9_]+|scribe_v[0-9][a-z0-9_]*|music_v[0-9]|dubbing_v[0-9])\b")
+MODEL_RE = re.compile(r"\b(?:eleven_[a-z0-9_]+|scribe_v[0-9][a-z0-9_]*|music_v[0-9][a-z0-9_]*|dubbing_v[0-9])\b")
 # `POST /v1/...`, `GET|PATCH /v1/...` in prose and tables
 DECLARED_RE = re.compile(r"`((?:GET|POST|PUT|PATCH|DELETE)(?:\|(?:GET|POST|PUT|PATCH|DELETE))*)\s+(/v[12]/[^`\s]+)`")
 # curl invocations

@@ -71,18 +71,30 @@ def parse_frontmatter(src: str):
     return m.group(1), fields
 
 
-def bash_available() -> bool:
-    """Some dev machines (Windows without a real bash) can't run `bash -n`; CI always can."""
-    try:
-        r = subprocess.run(
-            ["bash", "-n"], input="true\n", capture_output=True, encoding="utf-8", errors="replace"
-        )
-        return r.returncode == 0
-    except (OSError, ValueError):
-        return False
+def find_bash() -> str | None:
+    """Find a working bash executable for syntax checking (`bash -n`)."""
+    candidates = ["bash"]
+    if sys.platform == "win32":
+        for p in [
+            r"C:\Program Files\Git\bin\bash.exe",
+            r"C:\Program Files (x86)\Git\bin\bash.exe",
+        ]:
+            if pathlib.Path(p).exists():
+                candidates.append(p)
+    for cmd in candidates:
+        try:
+            r = subprocess.run(
+                [cmd, "-n"], input="true\n", capture_output=True, encoding="utf-8", errors="replace"
+            )
+            if r.returncode == 0:
+                return cmd
+        except (OSError, ValueError):
+            continue
+    return None
 
 
-HAVE_BASH = bash_available()
+BASH_BIN = find_bash()
+HAVE_BASH = BASH_BIN is not None
 
 
 def check_snippets(src: str, label: str) -> None:
@@ -93,7 +105,7 @@ def check_snippets(src: str, label: str) -> None:
         # encoding= is required: snippets contain IPA characters that the Windows
         # locale codec cannot encode.
         r = subprocess.run(
-            ["bash", "-n"], input=block, capture_output=True, encoding="utf-8", errors="replace"
+            [BASH_BIN, "-n"], input=block, capture_output=True, encoding="utf-8", errors="replace"
         )
         check(f"{label}: bash block {i} syntax", r.returncode == 0, r.stderr.strip())
 
